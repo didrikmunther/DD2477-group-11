@@ -12,7 +12,7 @@ def hello():
 
 @app.route("/init_index")
 def init_index():
-    requests.put('http://localhost:9200/documents', data={
+    res = requests.put('http://localhost:9200/documents', data={
         "mappings": {
             "properties": {
                 "content": {
@@ -22,6 +22,8 @@ def init_index():
         }
     })
 
+    print(res)
+
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=3000)
+    app.run(debug=True, host='0.0.0.0', port=3001)
