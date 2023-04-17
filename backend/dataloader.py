@@ -24,22 +24,17 @@ def indexTMDB(filename):
             "spoken languages" : [language["name"] for language in json.loads(row["spoken_languages"])],
             "status" : row["status"],
             "tagline" : row["tagline"],
-            "vote average" : row["vote_average"]
-            
-        
-
+            "vote average" : float(row["vote_average"])
         }
-        es.index(index = "movies", id = i, document = movie)  
+        es.index(index = "movies", id = i, document = movie)
 
 
 if __name__ == "__main__":
-    es = Elasticsearch("http://localhost:9200") #create an elastic search instance
-    es.indices.create(index = "movies") #create the movie index that we will use
-    indexTMDB("../movieDB/tmdb_5000_movies.csv") #insert the movies
+    es = Elasticsearch("http://localhost:9200") # Create an elastic search instance
+    es.indices.create(index = "movies") # Create the movie index that we will use
+    indexTMDB("./data/movies.csv") # Insert the movies
     es.indices.refresh(index="movies")
     print("The Number of inserted movies is ",es.count(index="movies")['count']) 
     res = es.get(index="movies", id=1)
     print("the first document is ",res['_source'])
-    es.indices.delete(index='movies') #remove the index
-
-    
+    # es.indices.delete(index='movies') #remove the index

@@ -17,4 +17,12 @@ ES_PORT=9200
 
 Run: `docker-compose up`
 
+### Generate enrollment token
+
+Run the following on the computer running the docker containers:
+
+`docker exec -it $(docker ps | grep elasticsearch | awk '{print $1}') bin/elasticsearch-create-enrollment-token --scope kibana`
+
+### Done
+
 Go to <http://localhost:5601/app/home#/> and login with username elastic, password abc123.
