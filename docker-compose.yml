@@ -42,6 +42,7 @@ services:
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_HOSTS=http://elastic:9200
+      - NODE_EXTRA_CA_CERTS="/etc/kibana/certs/ca-cert.pem"
 
 networks:
   stdnet:
