@@ -40,11 +40,6 @@ def get_user_preferences(user_id):
     }
 
 
-@app.route("/")
-def hello():
-    return "Hello, World!"
-
-
 @app.route("/search")
 def search():
     try:
@@ -52,13 +47,51 @@ def search():
     except KeyError:
         return {'error': 'Require query parameter \'q\''}
 
+    pf = 0.5 # personal_factor
+    qf = 1.0 - pf # query_factor
     preferences = get_user_preferences(0)
 
-    resp = es.search(index='movies', size=5, query={
-        'multi_match': {
-            'query': query,
-            'fuzziness': 2,
-            'fields': ['keywords', 'overview', 'production_companies']
+    query_matches = [{
+        'match': {
+            'keywords': {
+                'query': query,
+                'fuzziness': 1 * qf
+            },
+        }
+    },{
+        'match': {
+            'title': {
+                'query': query,
+                'fuzziness': 1,
+                'boost': 2.0 * qf
+            }
+        }
+    },{
+        'match': {
+            'overview': {
+                'query': query,
+                'fuzziness': 1,
+                'boost': 1.2 * qf
+            }
+        }
+    }]
+
+    total_keywords = sum(preferences[k] for k in preferences)
+    personalized_matches = [{
+        'match': {
+            'keywords': {
+                'query': k,
+                'boost': pf * preferences[k] / total_keywords
+            }
+        }
+    } for k in preferences]
+
+    resp = es.search(index='movies', size=10, query={
+        'bool': {
+            'should': [
+                *query_matches,
+                *personalized_matches,
+            ]
         }
     })
     return resp.body
