@@ -4,7 +4,7 @@ import json
 import csv
 
 def indexTMDB(filename):
-    f = open(filename,"r")
+    f = open(filename,"r", encoding="UTF8")
     reader = csv.DictReader(f)
     for i,row in enumerate(reader):
         if i == 4553: continue

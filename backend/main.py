@@ -55,22 +55,14 @@ def search():
     preferences = get_user_preferences(0)
 
     resp = es.search(index='movies', size=5, query={
-        'boosts': {
-            'keywords': [{
-                'type': 'value',
-                'value': v,
-                'operation': 'multiply',
-                'factor': preferences[v]
-            } for v in preferences]
-        },
-        "query": "nature"
-        # 'multi_match': {
-        #     'query': query,
-        #     'fuzziness': 2,
-        #     'fields': ['keywords', 'overview', 'production_companies']
-        # }
+        'multi_match': {
+            'query': query,
+            'fuzziness': 2,
+            'fields': ['keywords', 'overview', 'production_companies']
+        }
     })
     return resp.body
+
 
 if __name__ == "__main__":
     init_db()
