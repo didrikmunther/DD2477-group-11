@@ -40,16 +40,20 @@ def get_user_preferences(user_id):
     }
 
 
-@app.route("/search")
+@app.route("/search", methods=["POST"])
 def search():
-    try:
-        query = request.args.to_dict()['q']
+    try:        
+        payload = request.get_json()
     except KeyError:
         return {'error': 'Require query parameter \'q\''}
-
+    
     pf = 0.5 # personal_factor
     qf = 1.0 - pf # query_factor
     preferences = get_user_preferences(0)
+   
+    query = payload['query']
+    page = payload['page']
+    size = 10
 
     query_matches = [{
         'match': {
@@ -86,7 +90,7 @@ def search():
         }
     } for k in preferences]
 
-    resp = es.search(index='movies', size=10, query={
+    resp = es.search(index='movies', size=size, from_=page*size, query={
         'bool': {
             'should': [
                 *query_matches,
