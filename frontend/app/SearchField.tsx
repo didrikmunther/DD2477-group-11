@@ -14,7 +14,7 @@ export default function SearchField() {
 
   const handleOnKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Enter") {
-      router.push("/" + encodeURIComponent(query));
+      router.push("/" + encodeURIComponent(query) + "/0");
     }
   };
   return (
