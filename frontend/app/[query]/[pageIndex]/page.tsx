@@ -35,18 +35,19 @@ export default async function Page({
       <div>
         <SearchField />
       </div>
-      {movies.hits.hits.map((m: any) => {
+      {movies.hits.hits.map((m: any, idx: number) => {
         return (
           <div
             key={m._source.title}
             className="bg-indigo-50 border rounded-xl flex flex-col mt-4 p-3 "
           >
-            <div className="text-lg font-bold">{m._source.title}</div>
+            <div className="text-lg font-bold">
+              {pageIndex * 10 + idx + 1 + "."} {m._source.title}
+            </div>
             <div>
               <p className="font-semibold">Overview</p>
               <div className="text-sm">{m._source.overview}</div>
             </div>
-
             <div>
               <p className="font-semibold">Keywords</p>
               {m._source.keywords.map((keyword: string) => {
