@@ -47,7 +47,7 @@ def get_starred(user_id):
 
 @app.route("/get_stars", methods=["GET"])
 def get_starred_req():
-    get_starred(0)
+    return get_starred(0)
 
 @app.route("/log_star", methods=["POST"])
 def log_star():
@@ -88,7 +88,7 @@ def get_movie(movie_id):
 
 def get_user_preferences(user_id):
     movies = [get_movie(id) for id in get_starred(user_id)]
-    eprint(movies)
+    #eprint(movies)
 
     return {
         'nasa': 10,
@@ -96,9 +96,16 @@ def get_user_preferences(user_id):
     }
 
 def get_user_lang_pref(user_id):
-    return {
-        'en': 1
-    }
+    languages = {}
+    movies = [get_movie(id) for id in get_starred(user_id)]
+    for m in movies: 
+        language = m["_source"]["originallanguage"]
+        if language not in languages:
+            languages[language] = 1
+        else:
+            languages[language] = languages[language]+1
+    
+    return languages
 
 
 @app.route("/search", methods=["POST"])
@@ -166,9 +173,9 @@ def search():
     total_languages = sum(languages[k] for k in languages)
     language_matches = [{
         'match': {
-            'original language': {
+            'originallanguage': {
                 'query': k,
-                'boost': 2*pf*languages[k] / total_languages
+                'boost': 100*pf*languages[k] / total_languages
             }
         }
     }for k in languages]
@@ -188,19 +195,3 @@ def search():
 if __name__ == "__main__":
     init_db()
     app.run(debug=True, host='0.0.0.0', port=3000)
-
-
-app = Flask(__name__)
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-
-@app.after_request
-def add_header(r):
-    """
-    Add headers to both force latest IE rendering engine or Chrome Frame,
-    and also to cache the rendered page for 10 minutes.
-    """
-    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    r.headers["Pragma"] = "no-cache"
-    r.headers["Expires"] = "0"
-    r.headers['Cache-Control'] = 'public, max-age=0'
-    return r
