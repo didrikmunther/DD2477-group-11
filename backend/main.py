@@ -137,7 +137,8 @@ def get_user_lang_pref(user_id):
     languages = {}
     movies = [get_movie(id) for id in get_starred(user_id)]
     for m in movies: 
-        language = m["_source"]["originallanguage"]
+        eprint(m)
+        language = m["_source"]["original language"]
         if language not in languages:
             languages[language] = 1
         else:
