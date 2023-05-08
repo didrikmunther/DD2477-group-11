@@ -130,7 +130,7 @@ def get_keyword_preference(movies):
 
 def get_log_preference(user_id):
     log = get_log(user_id)
-    eprint(log)
+    return Counter(log)
 
 
 def get_user_lang_pref(user_id):
@@ -196,6 +196,22 @@ def search():
             'boost': 1*qf
         }
     },]
+
+    #todo: refactor this into a generic function
+
+    total_keywords = sum(log_preference[k] for k in log_preference)
+    personalized_matches = [{
+        'match': {
+            'keywords': {
+                'query': k,
+                'boost': pf * log_preference[k] / total_keywords
+            },
+            'title': {
+                'query': k,
+                'boost': pf * log_preference[k] / total_keywords
+            }
+        }
+    } for k in log_preference]
 
     total_keywords = sum(keyword_preference[k] for k in keyword_preference)
     personalized_matches = [{
