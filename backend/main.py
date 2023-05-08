@@ -37,7 +37,7 @@ def get_starred(user_id):
     try:
         with conn() as con:
             cur = con.cursor()
-            cur.execute("""SELECT movie_id FROM stars WHERE user_id=?""", (0,))
+            cur.execute("""SELECT movie_id FROM stars WHERE user_id=?""", (user_id,))
             rows = cur.fetchall()
             cur.close()
     except sqlite3.Error as error:
@@ -47,7 +47,7 @@ def get_starred(user_id):
 
 @app.route("/get_stars", methods=["GET"])
 def get_starred_req():
-    get_starred(0)
+    return get_starred(0)
 
 @app.route("/log_star", methods=["POST"])
 def log_star():
@@ -86,14 +86,14 @@ def get_movie(movie_id):
     return es.get(index='movies', id=movie_id)
 
 
-def get_user_preferences(user_id):
-    movies = [get_movie(id) for id in get_starred(user_id)]
-    eprint(movies)
+def get_user_preference(movies, field):
+    keywords = [movie['_source'][field] for movie in movies]
+    return {keyword: 1 for keyword in sum(keywords, [])}
 
-    return {
-        'nasa': 10,
-        'bears': 20
-    }
+
+def get_keyword_preference(movies):
+    return get_user_preference(movies, 'keywords')
+
 
 def get_user_lang_pref(user_id):
     return {
@@ -110,7 +110,10 @@ def search():
     
     pf = 0.5 # personal_factor
     qf = 1.0 - pf # query_factor
-    preferences = get_user_preferences(0)
+
+    movies = [get_movie(id) for id in get_starred(0)]
+
+    keyword_preference = get_keyword_preference(movies)
     languages = get_user_lang_pref(0)
    
     query = payload['query']
@@ -152,15 +155,15 @@ def search():
         }
     },]
 
-    total_keywords = sum(preferences[k] for k in preferences)
+    total_keywords = sum(keyword_preference[k] for k in keyword_preference)
     personalized_matches = [{
         'match': {
             'keywords': {
                 'query': k,
-                'boost': pf * preferences[k] / total_keywords
+                'boost': pf * keyword_preference[k] / total_keywords
             }
         }
-    } for k in preferences]
+    } for k in keyword_preference]
 
 
     total_languages = sum(languages[k] for k in languages)
