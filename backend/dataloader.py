@@ -12,7 +12,7 @@ def indexTMDB(filename):
             "budget" : float(row["budget"]),
             "genres" : [genre["name"] for genre in json.loads(row["genres"])],
             "keywords" : [keyword["name"] for keyword in json.loads(row["keywords"])],
-            "originallanguage" : row["originallanguage"],
+            "original language" : row["original_language"],
             "title" : row["title"],
             "overview" : row["overview"],
             "popularity" : float(row["popularity"]),
