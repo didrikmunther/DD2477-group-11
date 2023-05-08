@@ -2,6 +2,7 @@ from elasticsearch import Elasticsearch
 from flask import Flask, request
 import sys
 import sqlite3
+from collections import Counter
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -30,14 +31,22 @@ def init_db():
                 PRIMARY KEY(user_id, movie_id)
             );
         """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS log (
+                user_id integer,
+                query string,
+                FOREIGN KEY(user_id) REFERENCES user(id)
+            );
+        """)
         con.commit()
         cur.close()
 
-def get_starred(user_id):
+
+def get_log(user_id):
     try:
         with conn() as con:
             cur = con.cursor()
-            cur.execute("""SELECT movie_id FROM stars WHERE user_id=?""", (0,))
+            cur.execute("""SELECT query FROM log WHERE user_id=?""", (user_id,))
             rows = cur.fetchall()
             cur.close()
     except sqlite3.Error as error:
@@ -45,9 +54,34 @@ def get_starred(user_id):
 
     return [v[0] for v in rows]
 
+
+def log_query(user_id, query):
+    try:
+        with conn() as con:
+            cur = con.cursor()
+            cur.execute("""INSERT INTO log (user_id, query) VALUES (?, ?)""", (user_id, query))
+            cur.close()
+    except sqlite3.Error as error:
+        eprint(error)
+
+
+def get_starred(user_id):
+    try:
+        with conn() as con:
+            cur = con.cursor()
+            cur.execute("""SELECT movie_id FROM stars WHERE user_id=?""", (user_id,))
+            rows = cur.fetchall()
+            cur.close()
+    except sqlite3.Error as error:
+        eprint(error)
+
+    return [v[0] for v in rows]
+
+
 @app.route("/get_stars", methods=["GET"])
 def get_starred_req():
     return get_starred(0)
+
 
 @app.route("/log_star", methods=["POST"])
 def log_star():
@@ -86,14 +120,18 @@ def get_movie(movie_id):
     return es.get(index='movies', id=movie_id)
 
 
-def get_user_preferences(user_id):
-    movies = [get_movie(id) for id in get_starred(user_id)]
-    #eprint(movies)
+def get_user_preference(movies, field):
+    return Counter(sum([movie['_source'][field] for movie in movies], []))
 
-    return {
-        'nasa': 10,
-        'bears': 20
-    }
+
+def get_keyword_preference(movies):
+    return get_user_preference(movies, 'keywords')
+
+
+def get_log_preference(user_id):
+    log = get_log(user_id)
+    return Counter(log)
+
 
 def get_user_lang_pref(user_id):
     languages = {}
@@ -112,16 +150,23 @@ def get_user_lang_pref(user_id):
 def search():
     try:        
         payload = request.get_json()
+        query = payload['query']
+        page = payload['page']
+        user_id = 0
     except KeyError:
         return {'error': 'Require query parameter \'q\''}
     
     pf = 0.5 # personal_factor
     qf = 1.0 - pf # query_factor
-    preferences = get_user_preferences(0)
-    languages = get_user_lang_pref(0)
+
+    movies = [get_movie(id) for id in get_starred(user_id)]
+
+    log_preference = get_log_preference(user_id)
+    keyword_preference = get_keyword_preference(movies)
+    languages = get_user_lang_pref(user_id)
    
-    query = payload['query']
-    page = payload['page']
+    log_query(user_id, query)
+
     size = 10
 
     query_matches = [{
@@ -159,15 +204,31 @@ def search():
         }
     },]
 
-    total_keywords = sum(preferences[k] for k in preferences)
+    #todo: refactor this into a generic function
+
+    total_keywords = sum(log_preference[k] for k in log_preference)
     personalized_matches = [{
         'match': {
             'keywords': {
                 'query': k,
-                'boost': pf * preferences[k] / total_keywords
+                'boost': pf * log_preference[k] / total_keywords
+            },
+            'title': {
+                'query': k,
+                'boost': pf * log_preference[k] / total_keywords
             }
         }
-    } for k in preferences]
+    } for k in log_preference]
+
+    total_keywords = sum(keyword_preference[k] for k in keyword_preference)
+    personalized_matches = [{
+        'match': {
+            'keywords': {
+                'query': k,
+                'boost': pf * keyword_preference[k] / total_keywords
+            }
+        }
+    } for k in keyword_preference]
 
 
     total_languages = sum(languages[k] for k in languages)
@@ -189,9 +250,17 @@ def search():
             ]
         }
     })
+
     return resp.body
 
 
 if __name__ == "__main__":
     init_db()
+
+    try:
+        from flask_cors import CORS
+        CORS(app)
+    except ModuleNotFoundError:
+        pass
+
     app.run(debug=True, host='0.0.0.0', port=3000)
