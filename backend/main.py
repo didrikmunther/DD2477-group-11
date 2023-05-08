@@ -2,6 +2,7 @@ from elasticsearch import Elasticsearch
 from flask import Flask, request
 import sys
 import sqlite3
+from collections import Counter
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -88,7 +89,7 @@ def get_movie(movie_id):
 
 def get_user_preference(movies, field):
     keywords = [movie['_source'][field] for movie in movies]
-    return {keyword: 1 for keyword in sum(keywords, [])}
+    return Counter(sum(keywords, []))
 
 
 def get_keyword_preference(movies):
