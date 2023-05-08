@@ -1,9 +1,7 @@
 "use client";
 
 import { KeyboardEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
-import { useParams } from "next/navigation";
 
 type SearchFieldProps = {
   query: string;

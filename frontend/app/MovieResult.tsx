@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import SearchField from "./SearchField";
 import { Movie } from "../types";
 import LoadingSkeleton from "./LoadingSkeleton";
-
-import { StarIcon } from "@heroicons/react/24/solid";
+import MovieCard from "./MovieCard";
 
 const headers = {
   "Content-Type": "application/json",
@@ -31,8 +30,7 @@ export default function MovieResult() {
       throw new Error("Failed to fetch data");
     }
 
-    setMovies((await res.json()).hits.hits);
-    setPageIndex(page);
+    return res.json();
   };
 
   const getStarred = async () =>
@@ -72,10 +70,10 @@ export default function MovieResult() {
     setLoading(true);
 
     (async () => {
-      await getMovies(0);
+      setMovies((await getMovies(pageIndex)).hits.hits);
       setLoading(false);
     })();
-  }, [query, setLoading]);
+  }, [pageIndex, query, setLoading]);
 
   return (
     <>
@@ -86,39 +84,13 @@ export default function MovieResult() {
             <>
               {movies.map((m: Movie, idx: number) => {
                 return (
-                  <div
-                    key={m._source.title}
-                    className="bg-indigo-50 border rounded-xl flex flex-col mt-4 p-3 "
-                  >
-                    <div className="text-lg font-bold">
-                      <StarIcon
-                        onClick={() => starMovie(parseInt(m._id))}
-                        className={`h-5 w-5 inline cursor-pointer ${
-                          starred[parseInt(m._id)]
-                            ? "text-yellow-400"
-                            : "text-gray-400"
-                        }`}
-                      />
-                      {pageIndex * 10 + idx + 1 + "."} {m._source.title}
-                    </div>
-                    <div>
-                      <p className="font-semibold">Overview</p>
-                      <div className="text-sm">{m._source.overview}</div>
-                    </div>
-                    <div>
-                      <p className="font-semibold">Keywords</p>
-                      {m._source.keywords.map((keyword: string) => {
-                        return (
-                          <span
-                            className="inline-flex mr-1 items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10"
-                            key={keyword}
-                          >
-                            {keyword}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <MovieCard
+                    key={m._id}
+                    movie={m}
+                    rank={pageIndex * 10 + idx + 1}
+                    starred={starred[parseInt(m._id)]}
+                    starMovie={starMovie}
+                  />
                 );
               })}
               <nav
@@ -134,7 +106,7 @@ export default function MovieResult() {
                 <div className="flex flex-1 justify-between sm:justify-end">
                   {pageIndex > 0 && (
                     <button
-                      onClick={() => getMovies(pageIndex - 1)}
+                      onClick={() => setPageIndex(pageIndex - 1)}
                       type="button"
                       className="relative inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:outline-offset-0"
                     >
@@ -143,7 +115,7 @@ export default function MovieResult() {
                   )}
                   {movies.length === 10 && (
                     <button
-                      onClick={() => getMovies(pageIndex + 1)}
+                      onClick={() => setPageIndex(pageIndex + 1)}
                       type="button"
                       className="relative ml-3 inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:outline-offset-0"
                     >
