@@ -38,6 +38,10 @@ def get_user_preferences(user_id):
         'nasa': 10,
         'bears': 20
     }
+def get_user_lang_pref(user_id):
+    return {
+        'en': 1
+    }
 
 
 @app.route("/search", methods=["POST"])
@@ -50,6 +54,7 @@ def search():
     pf = 0.5 # personal_factor
     qf = 1.0 - pf # query_factor
     preferences = get_user_preferences(0)
+    languages = get_user_lang_pref(0)
    
     query = payload['query']
     page = payload['page']
@@ -67,7 +72,7 @@ def search():
             'title': {
                 'query': query,
                 'fuzziness': 1,
-                'boost': 2.0 * qf
+                'boost': 2* qf
             }
         }
     },{
@@ -78,7 +83,17 @@ def search():
                 'boost': 1.2 * qf
             }
         }
-    }]
+    },{
+        'bool': {
+            "must": [
+                {
+                'term': {
+                    'title.keyword': query
+                }
+            }],
+            'boost': 1*qf
+        }
+    },]
 
     total_keywords = sum(preferences[k] for k in preferences)
     personalized_matches = [{
@@ -90,11 +105,23 @@ def search():
         }
     } for k in preferences]
 
+
+    total_languages = sum(languages[k] for k in languages)
+    language_matches = [{
+        'match': {
+            'original language': {
+                'query': k,
+                'boost': 2*pf*languages[k] / total_languages
+            }
+        }
+    }for k in languages]
+
     resp = es.search(index='movies', size=size, from_=page*size, query={
         'bool': {
             'should': [
                 *query_matches,
                 *personalized_matches,
+                *language_matches,
             ]
         }
     })
@@ -104,3 +131,19 @@ def search():
 if __name__ == "__main__":
     init_db()
     app.run(debug=True, host='0.0.0.0', port=3000)
+
+
+app = Flask(__name__)
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
+@app.after_request
+def add_header(r):
+    """
+    Add headers to both force latest IE rendering engine or Chrome Frame,
+    and also to cache the rendered page for 10 minutes.
+    """
+    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    r.headers["Pragma"] = "no-cache"
+    r.headers["Expires"] = "0"
+    r.headers['Cache-Control'] = 'public, max-age=0'
+    return r
