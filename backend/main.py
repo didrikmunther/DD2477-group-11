@@ -88,8 +88,7 @@ def get_movie(movie_id):
 
 
 def get_user_preference(movies, field):
-    keywords = [movie['_source'][field] for movie in movies]
-    return Counter(sum(keywords, []))
+    return Counter(sum([movie['_source'][field] for movie in movies], []))
 
 
 def get_keyword_preference(movies):
