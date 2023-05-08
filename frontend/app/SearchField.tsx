@@ -5,16 +5,17 @@ import { useRouter } from "next/navigation";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { useParams } from "next/navigation";
 
-export default function SearchField() {
-  const params = useParams();
-  const [query, setQuery] = useState(
-    params.query ? decodeURIComponent(params.query) : ""
-  );
-  const router = useRouter();
+type SearchFieldProps = {
+  query: string;
+  setQuery: (v: string) => void;
+};
+
+export default function SearchField({ query, setQuery }: SearchFieldProps) {
+  const [value, setValue] = useState<string>(query);
 
   const handleOnKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Enter") {
-      router.push("/" + encodeURIComponent(query) + "/0");
+      setQuery(value);
     }
   };
   return (
@@ -32,8 +33,8 @@ export default function SearchField() {
           id="search"
           className="block w-full rounded-2xl border-0 py-4 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm  sm:leading-6"
           placeholder="The Godfather Part 2"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
           onKeyDown={handleOnKeyDown}
         />
       </div>
