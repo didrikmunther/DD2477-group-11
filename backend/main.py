@@ -3,11 +3,13 @@ from flask import Flask, request
 import sys
 import sqlite3
 from collections import Counter
+from flask_cors import CORS
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 app = Flask(__name__)
+CORS(app)
 es = Elasticsearch("http://elastic:9200")
 
 
@@ -31,8 +33,32 @@ def init_db():
                 PRIMARY KEY(user_id, movie_id)
             );
         """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS log (
+                user_id integer,
+                query string,
+                FOREIGN KEY(user_id) REFERENCES user(id)
+            );
+        """)
         con.commit()
         cur.close()
+
+
+def get_log(user_id):
+    try:
+        with conn() as con:
+            cur = con.cursor()
+            cur.execute("""SELECT query FROM log WHERE user_id=?""", (user_id,))
+            rows = cur.fetchall()
+            cur.close()
+    except sqlite3.Error as error:
+        eprint(error)
+
+    return [v[0] for v in rows]
+
+
+
+
 
 def get_starred(user_id):
     try:
@@ -46,9 +72,11 @@ def get_starred(user_id):
 
     return [v[0] for v in rows]
 
+
 @app.route("/get_stars", methods=["GET"])
 def get_starred_req():
     return get_starred(0)
+
 
 @app.route("/log_star", methods=["POST"])
 def log_star():
@@ -95,6 +123,11 @@ def get_keyword_preference(movies):
     return get_user_preference(movies, 'keywords')
 
 
+def get_log_preference(user_id):
+    log = get_log(user_id)
+    eprint(log)
+
+
 def get_user_lang_pref(user_id):
     return {
         'en': 1
@@ -105,19 +138,21 @@ def get_user_lang_pref(user_id):
 def search():
     try:        
         payload = request.get_json()
+        query = payload['query']
+        page = payload['page']
+        user_id = 0
     except KeyError:
         return {'error': 'Require query parameter \'q\''}
     
     pf = 0.5 # personal_factor
     qf = 1.0 - pf # query_factor
 
-    movies = [get_movie(id) for id in get_starred(0)]
+    movies = [get_movie(id) for id in get_starred(user_id)]
 
+    log_preference = get_log_preference(user_id)
     keyword_preference = get_keyword_preference(movies)
-    languages = get_user_lang_pref(0)
+    languages = get_user_lang_pref(user_id)
    
-    query = payload['query']
-    page = payload['page']
     size = 10
 
     query_matches = [{
