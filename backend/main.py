@@ -236,7 +236,7 @@ def search():
         'match': {
             'originallanguage': {
                 'query': k,
-                'boost': 100*pf*languages[k] / total_languages
+                'boost': 2*pf*languages[k] / total_languages
             }
         }
     }for k in languages]
