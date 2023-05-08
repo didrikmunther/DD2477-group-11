@@ -3,13 +3,11 @@ from flask import Flask, request
 import sys
 import sqlite3
 from collections import Counter
-from flask_cors import CORS
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 app = Flask(__name__)
-CORS(app)
 es = Elasticsearch("http://elastic:9200")
 
 
@@ -57,7 +55,14 @@ def get_log(user_id):
     return [v[0] for v in rows]
 
 
-
+def log_query(user_id, query):
+    try:
+        with conn() as con:
+            cur = con.cursor()
+            cur.execute("""INSERT INTO log (user_id, query) VALUES (?, ?)""", (user_id, query))
+            cur.close()
+    except sqlite3.Error as error:
+        eprint(error)
 
 
 def get_starred(user_id):
@@ -153,6 +158,8 @@ def search():
     keyword_preference = get_keyword_preference(movies)
     languages = get_user_lang_pref(user_id)
    
+    log_query(user_id, query)
+
     size = 10
 
     query_matches = [{
@@ -220,11 +227,19 @@ def search():
             ]
         }
     })
+
     return resp.body
 
 
 if __name__ == "__main__":
     init_db()
+
+    try:
+        from flask_cors import CORS
+        CORS(app)
+    except ModuleNotFoundError:
+        pass
+
     app.run(debug=True, host='0.0.0.0', port=3000)
 
 
