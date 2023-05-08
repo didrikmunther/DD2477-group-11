@@ -7,30 +7,75 @@ def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 app = Flask(__name__)
-con = sqlite3.connect("db.db")
 es = Elasticsearch("http://elastic:9200")
 
 
+# Connect to db
+def conn():
+    return sqlite3.connect("db.db")
+
 def init_db():
-    cur = con.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS user (
-            id integer primary key
-        )
-    """)
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS keywords (
-            user_id integer,
-            keyword string,
-            count integer,
-            FOREIGN KEY(user_id) REFERENCES user(id)
-        );
-    """)
+    with conn() as con:
+        cur = con.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS user (
+                id integer primary key
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS stars (
+                user_id integer,
+                movie_id integer,
+                FOREIGN KEY(user_id) REFERENCES user(id)
+                PRIMARY KEY(user_id, movie_id)
+            );
+        """)
+        con.commit()
+        cur.close()
 
+@app.route("/get_stars", methods=["GET"])
+def get_starred():
+    try:
+        with conn() as con:
+            cur = con.cursor()
+            cur.execute("""SELECT movie_id FROM stars WHERE user_id=?""", (0,))
+            rows = cur.fetchall()
+            cur.close()
+    except sqlite3.Error as error:
+        eprint(error)
 
-@app.route("/log_user_movie")
-def log_user_click(movie_id):
-    eprint("Logging user movie", movie_id)
+    return [v[0] for v in rows]
+
+@app.route("/log_star", methods=["POST"])
+def log_star():
+    try:        
+        payload = request.get_json()
+        movie_id = payload['movie']
+        value = payload['value']
+    except KeyError:
+        return {'error': 'Require query parameter \'movie\''}
+
+    eprint("Logging user movie", payload, value)
+
+    try:
+        with conn() as con:
+            cur = con.cursor()
+
+            if value:
+                cur.execute("""
+                    INSERT INTO stars (user_id, movie_id) VALUES (?, ?)
+                """, (0, movie_id))
+            else:
+                cur.execute("""
+                    DELETE FROM stars WHERE user_id=? AND movie_ID=?
+                """, (0, movie_id))
+
+            con.commit()
+            cur.close()
+    except sqlite3.Error as error:
+        eprint(error)
+
+    return get_starred()
 
 
 def get_user_preferences(user_id):

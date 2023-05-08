@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react";
 import SearchField from "./SearchField";
 
+import { StarIcon } from "@heroicons/react/24/solid";
+
+const headers = {
+  "Content-Type": "application/json",
+};
+
 async function getMovies(query: string, pageIndex: number) {
   const res = await fetch("http://localhost:3000/search", {
     method: "POST",
@@ -10,9 +16,7 @@ async function getMovies(query: string, pageIndex: number) {
       query: decodeURIComponent(query),
       page: pageIndex,
     }),
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
   });
 
   if (!res.ok) {
@@ -22,11 +26,40 @@ async function getMovies(query: string, pageIndex: number) {
   return res.json();
 }
 
+const getStarred = async () =>
+  Object.fromEntries(
+    (
+      (await fetch("http://localhost:3000/get_stars", {
+        method: "GET",
+        headers,
+      }).then((r) => r.json())) as number[]
+    ).map((v) => [v, true])
+  );
+
 function MovieResult() {
   const [pageIndex] = useState<number>(0);
   const [query, setQuery] = useState<string>("");
   const [movies, setMovies] = useState(undefined);
   const [loading, setLoading] = useState<boolean>(false);
+  const [starred, setStarred] = useState<Record<number, boolean>>({});
+
+  useEffect(() => {
+    (async () => setStarred(await getStarred()))();
+  }, [setStarred]);
+
+  const starMovie = async (id: number) => {
+    const res: number[] = await fetch("http://localhost:3000/log_star", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        movie: id,
+        value: !starred[id]
+      }),
+    }).then((r) => r.json());
+
+    console.log(res);
+    setStarred(Object.fromEntries(res.map((v) => [v, true])));
+  };
 
   useEffect(() => {
     if (query === "") {
@@ -58,6 +91,14 @@ function MovieResult() {
                 className="bg-indigo-50 border rounded-xl flex flex-col mt-4 p-3 "
               >
                 <div className="text-lg font-bold">
+                  <StarIcon
+                    onClick={() => starMovie(m._id)}
+                    className={`h-5 w-5 inline cursor-pointer ${
+                      starred[m._id as number]
+                        ? "text-yellow-400"
+                        : "text-gray-400"
+                    }`}
+                  />{" "}
                   {pageIndex * 10 + idx + 1 + "."} {m._source.title}
                 </div>
                 <div>
