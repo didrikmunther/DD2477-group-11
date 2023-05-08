@@ -33,8 +33,7 @@ def init_db():
         con.commit()
         cur.close()
 
-@app.route("/get_stars", methods=["GET"])
-def get_starred():
+def get_starred(user_id):
     try:
         with conn() as con:
             cur = con.cursor()
@@ -46,12 +45,17 @@ def get_starred():
 
     return [v[0] for v in rows]
 
+@app.route("/get_stars", methods=["GET"])
+def get_starred_req():
+    get_starred(0)
+
 @app.route("/log_star", methods=["POST"])
 def log_star():
     try:        
         payload = request.get_json()
         movie_id = payload['movie']
         value = payload['value']
+        user_id = 0
     except KeyError:
         return {'error': 'Require query parameter \'movie\''}
 
@@ -64,25 +68,33 @@ def log_star():
             if value:
                 cur.execute("""
                     INSERT INTO stars (user_id, movie_id) VALUES (?, ?)
-                """, (0, movie_id))
+                """, (user_id, movie_id))
             else:
                 cur.execute("""
                     DELETE FROM stars WHERE user_id=? AND movie_ID=?
-                """, (0, movie_id))
+                """, (user_id, movie_id))
 
             con.commit()
             cur.close()
     except sqlite3.Error as error:
         eprint(error)
 
-    return get_starred()
+    return get_starred(user_id)
+
+
+def get_movie(movie_id):
+    return es.get(index='movies', id=movie_id)
 
 
 def get_user_preferences(user_id):
+    movies = [get_movie(id) for id in get_starred(user_id)]
+    eprint(movies)
+
     return {
         'nasa': 10,
         'bears': 20
     }
+
 def get_user_lang_pref(user_id):
     return {
         'en': 1
