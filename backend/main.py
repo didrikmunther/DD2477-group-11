@@ -188,28 +188,31 @@ def search():
             'title': {
                 'query': query,
                 'fuzziness': 1,
-                'boost': 2* qf
+                'boost': 4* qf
             }
         }
     },{
         'match': {
             'overview': {
                 'query': query,
-                'fuzziness': 1,
+                'fuzziness': 2,
                 'boost': 1.2 * qf
             }
         }
-    },{
-        'bool': {
-            "must": [
-                {
-                'term': {
-                    'title.keyword': query
-                }
-            }],
-            'boost': 1*qf
-        }
-    },]
+    },
+    #removed this title boost and just boost the title query above
+    # {
+    #     'bool': {
+    #         "must": [
+    #             {
+    #             'term': {
+    #                 'title.keyword': query
+    #             }
+    #         }],
+    #         'boost': 1*qf
+    #     }
+    # },
+    ]
 
     #todo: refactor this into a generic function
 
@@ -232,7 +235,7 @@ def search():
         'match': {
             'keywords': {
                 'query': k,
-                'boost': pf * keyword_preference[k] / total_keywords
+                'boost': 3*pf * keyword_preference[k] / total_keywords
             }
         }
     } for k in keyword_preference]
@@ -241,9 +244,9 @@ def search():
     total_languages = sum(languages[k] for k in languages)
     language_matches = [{
         'match': {
-            'originallanguage': {
+            'original language': {
                 'query': k,
-                'boost': 2*pf*languages[k] / total_languages
+                'boost': 0.5*pf*languages[k] / total_languages
             }
         }
     }for k in languages]
@@ -259,36 +262,6 @@ def search():
     })
 
     return resp.body
-
-#def create_Users_Test():
-
- #   user1_Movie_ids = [1,2,3] #japanese watcher
-                              #american watcher
-                              #french watcher
-                              #marvel fan
-                              #drama fan
-    #for id in user1_Movie_ids:
-        #insert_star_id(1,id)
-
-# def insert_star_id(user_id, movie_id):
-#     try:
-#         with conn() as con:
-#             cur = con.cursor()
-
-#             if value:
-#                 cur.execute("""
-#                         INSERT INTO stars (user_id, movie_id) VALUES (?, ?)
-#                     """, (user_id, movie_id))
-#             else:
-#                 cur.execute("""
-#                         DELETE FROM stars WHERE user_id=? AND movie_ID=?
-#                     """, (user_id, movie_id))
-
-#             con.commit()
-#             cur.close()
-#     except sqlite3.Error as error:
-#         eprint(error)
-
 
 if __name__ == "__main__":
     init_db()
