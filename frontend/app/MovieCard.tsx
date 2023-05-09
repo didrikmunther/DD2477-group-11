@@ -19,10 +19,10 @@ export default function MovieCard({
       key={movie._source.title}
       className="bg-indigo-50 border rounded-xl flex flex-col mt-4 p-3 "
     >
-      <div className="text-lg font-bold">
+      <div className="text-lg font-bold flex items-center">
         <StarIcon
           onClick={() => starMovie(parseInt(movie._id))}
-          className={`h-5 w-5 inline cursor-pointer ${
+          className={`h-5 w-5 inline cursor-pointer mr-2 ${
             starred ? "text-yellow-400" : "text-gray-400"
           }`}
         />
