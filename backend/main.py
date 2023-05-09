@@ -137,7 +137,6 @@ def get_user_lang_pref(user_id):
     languages = {}
     movies = [get_movie(id) for id in get_starred(user_id)]
     for m in movies: 
-        eprint(m)
         language = m["_source"]["original language"]
         if language not in languages:
             languages[language] = 1
@@ -253,6 +252,35 @@ def search():
     })
 
     return resp.body
+
+#def create_Users_Test():
+
+ #   user1_Movie_ids = [1,2,3] #japanese watcher
+                              #american watcher
+                              #french watcher
+                              #marvel fan
+                              #drama fan
+    #for id in user1_Movie_ids:
+        #insert_star_id(1,id)
+
+# def insert_star_id(user_id, movie_id):
+#     try:
+#         with conn() as con:
+#             cur = con.cursor()
+
+#             if value:
+#                 cur.execute("""
+#                         INSERT INTO stars (user_id, movie_id) VALUES (?, ?)
+#                     """, (user_id, movie_id))
+#             else:
+#                 cur.execute("""
+#                         DELETE FROM stars WHERE user_id=? AND movie_ID=?
+#                     """, (user_id, movie_id))
+
+#             con.commit()
+#             cur.close()
+#     except sqlite3.Error as error:
+#         eprint(error)
 
 
 if __name__ == "__main__":
