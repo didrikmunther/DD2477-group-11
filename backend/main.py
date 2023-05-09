@@ -96,7 +96,7 @@ def log_star():
         payload = request.get_json()
         movie_id = payload['movie']
         value = payload['value']
-        user_id = 0
+        user_id = payload['user_id']
     except KeyError:
         return {'error': 'Require query parameter \'movie\''}
 
@@ -160,7 +160,7 @@ def search():
         payload = request.get_json()
         query = payload['query']
         page = payload['page']
-        user_id = 0
+        user_id = payload['user_id']
     except KeyError:
         return {'error': 'Require query parameter \'q\''}
     
