@@ -21,3 +21,8 @@ export interface Movie {
     vote_average: number;
   };
 }
+
+export interface User {
+  id: number;
+  label: string;
+}

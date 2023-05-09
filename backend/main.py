@@ -78,9 +78,16 @@ def get_starred(user_id):
     return [v[0] for v in rows]
 
 
-@app.route("/get_stars", methods=["GET"])
+@app.route("/get_stars", methods=["POST"])
 def get_starred_req():
-    return get_starred(0)
+    try:
+        payload = request.get_json()
+        user_id = payload['user_id']
+    except KeyError:
+        return {'error': 'Require query parameter \'user_id\''}
+
+
+    return get_starred(user_id)
 
 
 @app.route("/log_star", methods=["POST"])
