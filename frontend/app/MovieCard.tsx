@@ -19,14 +19,28 @@ export default function MovieCard({
       key={movie._source.title}
       className="bg-indigo-50 border rounded-xl flex flex-col mt-4 p-3 "
     >
-      <div className="text-lg font-bold flex items-center">
+      <div className="text-lg font-bold flex items-center space-x-2">
         <StarIcon
           onClick={() => starMovie(parseInt(movie._id))}
-          className={`h-5 w-5 inline cursor-pointer mr-2 ${
+          className={`h-5 w-5 inline cursor-pointer ${
             starred ? "text-yellow-400" : "text-gray-400"
           }`}
         />
-        {rank + "."} {movie._source.title}
+        <h2>
+          {rank + "."} {movie._source.title}{" "}
+        </h2>
+        <div>
+          {movie._source.genres.map((genre: string) => {
+            return (
+              <span
+                className="inline-flex items-center rounded-md shadow-sm bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700 ring-1 ring-inset ring-purple-700/10 mr-1"
+                key={genre}
+              >
+                {genre}
+              </span>
+            );
+          })}
+        </div>
       </div>
       <div>
         <p className="font-semibold">Overview</p>
