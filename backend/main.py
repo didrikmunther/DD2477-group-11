@@ -204,6 +204,14 @@ def search():
                 'boost': 0.5 * qf
             }
         }
+    },{
+        'match': {
+            'genres': {
+                'query': query,
+                'fuzziness': 1,
+                'boost': 0.5 * qf
+            }
+        }
     },
     #removed this title boost and just boost the title query above
     # {
