@@ -26,6 +26,30 @@ Go to <http://localhost:5601/app/home#/> and login with username elastic, passwo
 
 ## Insert Movie Database into Elasticsearch
 
-Go the the backend folder `cd ./backend`.
+Go to the backend folder `cd ./backend`.
 
 Run the dataloader script `python3 dataloader.py`.
+
+## Access the web interface
+
+Prerequisite:
+- Node.js v16 or higher
+
+Go to the frontend folder `cd ./frontend`.
+
+Install packages:
+```console
+$ npm i
+// or 
+$ yarn
+```
+
+Run dev build:
+
+```console
+$ npm run dev
+// or 
+$ yarn dev
+```
+
+Go to http://localhost:4000
