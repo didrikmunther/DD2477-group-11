@@ -135,6 +135,10 @@ def get_keyword_preference(movies):
     return get_user_preference(movies, 'keywords')
 
 
+def get_genre_preference(movies):
+    return get_user_preference(movies, 'genres')
+
+
 def get_log_preference(user_id):
     log = get_log(user_id)
     return Counter(log)
@@ -163,16 +167,17 @@ def search():
     except KeyError:
         return {'error': 'Require query parameter \'q\''}
     
-    pf = 0.5 # personal_factor
+    pf = 0.4 # personal_factor
     qf = 1.0 - pf # query_factor
 
     movies = [get_movie(id) for id in get_starred(user_id)]
     eprint(movies)
     log_preference = get_log_preference(user_id)
     keyword_preference = get_keyword_preference(movies)
+    genre_preference = get_genre_preference(movies)
     languages = get_user_lang_pref(user_id)
    
-    log_query(user_id, query)
+    # log_query(user_id, query)
 
     size = 10
 
@@ -196,7 +201,7 @@ def search():
             'overview': {
                 'query': query,
                 'fuzziness': 1,
-                'boost': 1 * qf
+                'boost': 0.5 * qf
             }
         }
     },
@@ -246,6 +251,16 @@ def search():
         }
     } for k in keyword_preference]
 
+    total_keywords = sum(genre_preference[k] for k in genre_preference)
+    genre_matches = [{
+        'match': {
+            'genres': {
+                'query': k,
+                'boost': 7.5 *pf * genre_preference[k] / total_keywords
+            }
+        }
+    } for k in genre_preference]
+
 
     total_languages = sum(languages[k] for k in languages)
     language_matches = [{
@@ -260,10 +275,13 @@ def search():
     resp = es.search(index='movies', size=size, from_=page*size, query={
         'bool': {
             'should': [
-                #*query_matches,
-                *personalized_matches,
-                #*language_matches,
-                #*log_matches
+                *query_matches,
+                *([] if user_id == 0 else [
+                    *personalized_matches,
+                    *language_matches,
+                    *log_matches,
+                    *genre_matches
+                ])
             ]
         }
     })
