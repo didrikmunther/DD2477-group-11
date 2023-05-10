@@ -177,7 +177,7 @@ def search():
     genre_preference = get_genre_preference(movies)
     languages = get_user_lang_pref(user_id)
    
-    log_query(user_id, query)
+    # log_query(user_id, query)
 
     size = 10
 
@@ -276,10 +276,12 @@ def search():
         'bool': {
             'should': [
                 *query_matches,
-                *personalized_matches,
-                *language_matches,
-                *log_matches,
-                *genre_matches
+                *([] if user_id == 0 else [
+                    *personalized_matches,
+                    *language_matches,
+                    *log_matches,
+                    *genre_matches
+                ])
             ]
         }
     })
