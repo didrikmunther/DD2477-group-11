@@ -14,7 +14,7 @@ const users: User[] = [
   { id: 0, label: "Default" },
   { id: 1, label: "Japanese" },
   { id: 2, label: "Marvel fan" },
-  { id: 3, label: "Drama fan" },
+  { id: 3, label: "Horror fan" },
   { id: 4, label: "Disney fan" },
 ];
 

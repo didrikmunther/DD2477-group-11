@@ -167,7 +167,7 @@ def search():
     qf = 1.0 - pf # query_factor
 
     movies = [get_movie(id) for id in get_starred(user_id)]
-
+    eprint(movies)
     log_preference = get_log_preference(user_id)
     keyword_preference = get_keyword_preference(movies)
     languages = get_user_lang_pref(user_id)
@@ -260,10 +260,10 @@ def search():
     resp = es.search(index='movies', size=size, from_=page*size, query={
         'bool': {
             'should': [
-                *query_matches,
+                #*query_matches,
                 *personalized_matches,
-                *language_matches,
-                *log_matches
+                #*language_matches,
+                #*log_matches
             ]
         }
     })
