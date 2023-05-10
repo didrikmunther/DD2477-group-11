@@ -177,7 +177,7 @@ def search():
     genre_preference = get_genre_preference(movies)
     languages = get_user_lang_pref(user_id)
    
-    # log_query(user_id, query)
+    log_query(user_id, query)
 
     size = 10
 

@@ -26,7 +26,10 @@ def indexTMDB(filename):
             "tagline" : row["tagline"],
             "vote average" : float(row["vote_average"])
         }
-        print(i)
+
+        if(i % 1000 == 0):
+            print("Loaded ", i, " movies ...")
+
         es.index(index = "movies", id = i, document = movie)
 
 
