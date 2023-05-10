@@ -1,0 +1,10 @@
+This file contains all the titles of the movies favored for the users.
+
+Japan: Shin Godzilla, Space Pirate Captain Harlock, Howl's Moving Castle, Princess Mononoke, Steamboy, Spirited Away, Space Battleship Yamato, Pokémon: Spell of the Unknown, Godzilla 2000, 'Cure', 
+
+marvel: 'Avengers: Age of Ultron', 'The Avengers', 'Captain 
+America: Civil War', 'Spider-Man 2', 'X-Men: Days of Future Past', 'Iron Man 2', 'Captain America: The Winter Soldier', 'Guardians of the Galaxy',  'X-Men Origins: Wolverine', 'Thor: The Dark World', 'Thor', 'Spider-Man',  'The Incredible Hulk', Ant-Man', 'X2', 'The Wolverine', 'Kick-Ass 2'
+
+Horror: 'Hannibal Rising', 'A Nightmare on Elm Street', 'The Passion of the Christ', 'Scream 2', 'Psycho', 'Scream', 'The Shining', 'The Texas Chainsaw Massacre: The Beginning', "Jennifer's Body", 'Exorcist II: The Heretic', 'The Exorcist', 'Black Christmas', 'American Psycho',  "Freddy's Dead: The Final Nightmare", 'The Hunt', "A Nightmare on Elm Street Part 2: Freddy's Revenge", 'The Evil Dead'
+
+Disney: 'Tangled', 'Alice in Wonderland', 'Toy Story 3', 'The Jungle Book', 'Up', 'Frozen', 'The Incredibles', 'Toy Story 2', 'Mulan', 'Lilo & Stitch', 'Pinocchio', 'Toy Story',  'Aladdin', 'Mary Poppins', 'Snow White and the Seven Dwarfs', 
