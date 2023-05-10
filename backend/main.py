@@ -171,7 +171,7 @@ def search():
     qf = 1.0 - pf # query_factor
 
     movies = [get_movie(id) for id in get_starred(user_id)]
-
+    eprint(movies)
     log_preference = get_log_preference(user_id)
     keyword_preference = get_keyword_preference(movies)
     genre_preference = get_genre_preference(movies)
