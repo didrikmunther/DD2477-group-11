@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import SearchField from "./SearchField";
 import { Movie, User } from "../types";
 import LoadingSkeleton from "./LoadingSkeleton";
@@ -26,45 +26,51 @@ export default function MovieResult() {
   const [starred, setStarred] = useState<Record<number, boolean>>({});
   const [selectedUser, setSelectedUser] = useState(users[0]);
 
-  const getMovies = async (page: number) => {
-    const res = await fetch("http://localhost:3000/search", {
-      method: "POST",
-      body: JSON.stringify({
-        query: query,
-        page: page,
-        user_id: selectedUser.id,
-      }),
-      headers,
-    });
+  const getMovies = useCallback(
+    async (page: number, user_id: number) => {
+      const res = await fetch("http://localhost:3000/search", {
+        method: "POST",
+        body: JSON.stringify({
+          query: query,
+          page: page,
+          user_id,
+        }),
+        headers,
+      });
 
-    if (!res.ok) {
-      throw new Error("Failed to fetch data");
-    }
+      if (!res.ok) {
+        throw new Error("Failed to fetch data");
+      }
 
-    return res.json();
-  };
+      return res.json();
+    },
+    [query]
+  );
 
-  const getStarred = async () =>
-    Object.fromEntries(
-      (
-        (await fetch("http://localhost:3000/get_stars", {
-          method: "POST",
-          body: JSON.stringify({
-            user_id: selectedUser.id,
-          }),
-          headers,
-        }).then((r) => r.json())) as number[]
-      ).map((v) => [v, true])
-    );
+  const getStarred = useCallback(
+    async (user_id: number) =>
+      Object.fromEntries(
+        (
+          (await fetch("http://localhost:3000/get_stars", {
+            method: "POST",
+            body: JSON.stringify({
+              user_id,
+            }),
+            headers,
+          }).then((r) => r.json())) as number[]
+        ).map((v) => [v, true])
+      ),
+    []
+  );
 
-  const starMovie = async (id: number) => {
+  const starMovie = async (id: number, user_id: number) => {
     const res: number[] = await fetch("http://localhost:3000/log_star", {
       method: "POST",
       headers,
       body: JSON.stringify({
         movie: id,
         value: !starred[id],
-        user_id: selectedUser.id,
+        user_id,
       }),
     }).then((r) => r.json());
 
@@ -77,8 +83,8 @@ export default function MovieResult() {
   };
 
   useEffect(() => {
-    (async () => setStarred(await getStarred()))();
-  }, [setStarred, selectedUser]);
+    (async () => setStarred(await getStarred(selectedUser.id)))();
+  }, [setStarred, selectedUser.id, getStarred]);
 
   useEffect(() => {
     if (query === "") {
@@ -89,10 +95,10 @@ export default function MovieResult() {
     setLoading(true);
 
     (async () => {
-      setMovies((await getMovies(pageIndex)).hits.hits);
+      setMovies((await getMovies(pageIndex, selectedUser.id)).hits.hits);
       setLoading(false);
     })();
-  }, [pageIndex, query, setLoading]);
+  }, [pageIndex, query, setLoading, getMovies, selectedUser.id]);
 
   return (
     <div className="divide-y space-y-5">
@@ -116,7 +122,7 @@ export default function MovieResult() {
                     movie={m}
                     rank={pageIndex * 10 + idx + 1}
                     starred={starred[parseInt(m._id)]}
-                    starMovie={starMovie}
+                    starMovie={() => starMovie(m._id as any as number, selectedUser.id)}
                   />
                 ))}
                 <nav

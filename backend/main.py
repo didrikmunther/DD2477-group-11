@@ -187,16 +187,16 @@ def search():
         'match': {
             'title': {
                 'query': query,
-                'fuzziness': 1,
-                'boost': 4* qf
+                'fuzziness': 2,
+                'boost': 1* qf
             }
         }
     },{
         'match': {
             'overview': {
                 'query': query,
-                'fuzziness': 2,
-                'boost': 1.2 * qf
+                'fuzziness': 1,
+                'boost': 1 * qf
             }
         }
     },
@@ -217,15 +217,21 @@ def search():
     #todo: refactor this into a generic function
 
     total_keywords = sum(log_preference[k] for k in log_preference)
-    personalized_matches = [{
-        'match': {
-            'keywords': {
-                'query': k,
-                'boost': pf * log_preference[k] / total_keywords
-            },
-            'title': {
-                'query': k,
-                'boost': pf * log_preference[k] / total_keywords
+    log_matches = [{
+        'bool': {
+            'should': {
+                'match': {
+                    'keywords': {
+                        'query': k,
+                        'boost': pf * log_preference[k] / total_keywords
+                    }
+                },
+                'match': {
+                    'title': {
+                        'query': k,
+                        'boost': pf * log_preference[k] / total_keywords
+                    }
+                }
             }
         }
     } for k in log_preference]
@@ -235,7 +241,7 @@ def search():
         'match': {
             'keywords': {
                 'query': k,
-                'boost': 3*pf * keyword_preference[k] / total_keywords
+                'boost': 2*pf * keyword_preference[k] / total_keywords
             }
         }
     } for k in keyword_preference]
@@ -246,7 +252,7 @@ def search():
         'match': {
             'original language': {
                 'query': k,
-                'boost': 0.5*pf*languages[k] / total_languages
+                'boost': 2*pf*languages[k] / total_languages
             }
         }
     }for k in languages]
@@ -257,6 +263,7 @@ def search():
                 *query_matches,
                 *personalized_matches,
                 *language_matches,
+                *log_matches
             ]
         }
     })
